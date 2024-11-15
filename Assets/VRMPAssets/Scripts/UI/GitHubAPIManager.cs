@@ -38,9 +38,8 @@ public class GitHubAPIManager : MonoBehaviour
     private string currentFilePath;
     private string currentFileSHA;  // Store the file SHA for committing changes
     private string originalFileContent;
-    private string ownerNameForCommit;
-    private string repoNameForCommit;
     private string repoMetadataUrl;
+    public TextMeshProUGUI commitResult;
 
     private void Start()
     {        
@@ -76,7 +75,11 @@ private IEnumerator SendGitHubRequest(UnityWebRequest request)
         // Parse the response if successful
         RepositoryInfo[] repos = JsonHelper.GetArray<RepositoryInfo>(request.downloadHandler.text);
         DisplayRepositories(repos);
-        fullPath = "/repos/Leis024/"; // Assuming this is relevant after loading repos
+       
+        string nome = XRINetworkPlayer.LocalPlayer.playerName;
+        //Debug.Log("Nome Player " + nome);
+        fullPath = $"/repos/{nome}/"; // A quanto pare non serve, ma lo lascio lo stesso, non si sa mai
+        
     }
     else
     {
@@ -398,6 +401,7 @@ private void ToggleEditMode(bool isInEditMode)
         Debug.Log("Switching to View Mode");
 
         // Hide input field, show highlighted text component
+        commitResult.text = "";
         inputFieldComponent.gameObject.SetActive(false);
         inputFieldComponent.interactable = false;
         CommitButton.gameObject.SetActive(false);
@@ -441,7 +445,7 @@ private IEnumerator CommitFileChange(string newContent, string commitMessage)
     string json = JsonUtility.ToJson(commitData);
 
     // Debugging the JSON
-    Debug.Log("JSON Payload: " + json);
+    //Debug.Log("JSON Payload: " + json);
 
     // Create the request
     UnityWebRequest request = new UnityWebRequest(repoMetadataUrl, "PUT");
@@ -454,33 +458,43 @@ private IEnumerator CommitFileChange(string newContent, string commitMessage)
 
     yield return request.SendWebRequest();
 
+
+    
+/*
     inputFieldComponent.gameObject.SetActive(false);
     inputFieldComponent.interactable = false;
     CommitButton.gameObject.SetActive(false);
+    textComponent.gameObject.SetActive(true);
+    
+Debug.Log("Aggiorna");
     string aggiorna = repoMetadataUrl;
-    aggiorna = aggiorna.Replace("https://api.github.com/repos/", "");
+    aggiorna = aggiorna.Replace("https://api.github.com/repos", "");
         
-        int index = aggiorna.IndexOf("contents");
+        int index = aggiorna.IndexOf("main");
 
         if (index >= 0)
         {
             // Replace only the first occurrence of "main" with "contents"
-            aggiorna = aggiorna.Substring(0, index) + "main" + aggiorna.Substring(index + "contents".Length);
+            aggiorna = aggiorna.Substring(0, index) + "contents" + aggiorna.Substring(index + "main".Length);
         }
         
         Debug.Log("URL Per Aggiornare dopo commit : " + aggiorna);
-    GetFileContentAndDisplay(aggiorna);
+    GetFileContentAndDisplay(aggiorna); */
 
 
     // Check for errors
     if (request.result == UnityWebRequest.Result.Success)
     {
         Debug.Log("File committed successfully!");
+        //ToggleEditMode(false);
+        commitResult.text = "<color=green>File committed successfully!</color>";
     }
     else
     {
         Debug.Log("Failed to commit file: " + request.error);
         Debug.Log("Response: " + request.downloadHandler.text);
+        commitResult.color = Color.red;
+        commitResult.text = "<color=red>File commit failed!</color>";
     }
 }
 
